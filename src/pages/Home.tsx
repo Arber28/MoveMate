@@ -165,7 +165,7 @@ const saved = filteredProjects.reduce(
   0
 );
 
-const open = budget - spent;
+
 
 const bought = filteredProjects.reduce(
   (sum, project) =>
@@ -204,7 +204,6 @@ const progress =
   budget={budget}
   spent={spent}
   saved={saved}
-  open={open}
   bought={bought}
   openCount={openCount}
   progress={progress}

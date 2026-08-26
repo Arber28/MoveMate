@@ -1,10 +1,9 @@
-import { Wallet, CheckCircle2, Circle, PiggyBank } from "lucide-react";
+import { Wallet, CheckCircle2, Circle } from "lucide-react";
 
 type Props = {
   budget: number;
   spent: number;
   saved: number;
-  open: number;
   bought: number;
   openCount: number;
   progress: number;
@@ -14,7 +13,6 @@ export default function StatCards({
   budget,
   spent,
   saved,
-  open,
   bought,
   openCount,
   progress,
