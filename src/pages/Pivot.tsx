@@ -64,7 +64,12 @@ export default function Pivot() {
 
   return (
   <div className="min-h-screen bg-zinc-950 pb-24 text-white">
-    <div className="px-6 pt-[env(safe-area-inset-top)]">
+    <div
+      className="px-6"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top) + 20px)",
+      }}
+    >
       <h1 className="mb-6 text-3xl font-bold">
         Pivot
       </h1>
