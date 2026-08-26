@@ -42,13 +42,13 @@ export default function PivotTable({
   return (
     <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
 
-      <table className="w-full table-fixed text-xs">
+      <table className="w-full table-fixed text-[9px]">
 
         <thead>
 
           <tr className="border-b border-zinc-800 bg-zinc-950">
 
-            <th className="w-36 px-2 py-2 text-left">
+            <th className="w-28 px-2 py-2 text-left">
               {status === "offen"
                 ? "Offen"
                 : "Gekauft"}
@@ -57,13 +57,13 @@ export default function PivotTable({
             {priorities.map((prio) => (
               <th
                 key={prio}
-                className="w-14 px-2 py-2 text-center"
+                className="w-10 px-1 py-2 text-center"
               >
                 {prio}
               </th>
             ))}
 
-            <th className="w-20 px-2 py-2 text-center">
+            <th className="w-14 px-1 py-2 text-center">
               Gesamt
             </th>
 
