@@ -120,13 +120,23 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background: #09090b;
+  }
+
   body {
-    @apply bg-background text-foreground;
-    }
+    @apply text-foreground;
+    overscroll-behavior: none;
+  }
+
   html {
     @apply font-sans;
-    }
+  }
 }
 
 @media (min-width: 1024px) {
