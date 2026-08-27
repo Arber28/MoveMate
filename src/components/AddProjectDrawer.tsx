@@ -483,15 +483,15 @@ useEffect(() => {
 
       <input
   type="number"
-  value={position.price}
+  value={position.price === 0 ? "" : position.price}
   onChange={(e) =>
-    updatePosition(
-      position.id,
-      "price",
-      Number(e.target.value)
-    )
-  }
-  placeholder="0"
+  updatePosition(
+    position.id,
+    "price",
+    e.target.value === "" ? 0 : Number(e.target.value)
+  )
+}
+  placeholder="Preis eingeben"
   className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 outline-none focus:border-violet-500"
 />
     </div>
