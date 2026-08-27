@@ -205,6 +205,23 @@ if (positionsError) {
 }
 
 alert("Projekt erfolgreich gespeichert!");
+
+setProjectName("");
+setSelectedRoom("🛋 Wohnzimmer");
+setPriority("P0");
+setPositions([
+  {
+    id: Date.now(),
+    title: "",
+    link: "",
+    price: 0,
+    paid_price: null,
+    country: "AT",
+    status: "offen",
+    image_url: "",
+  },
+]);
+
 onClose();
 };
 
@@ -215,13 +232,31 @@ const [projectName, setProjectName] = useState("");
 
 
 useEffect(() => {
-  if (!project) return;
-
-  setProjectName(project.name);
-  setSelectedRoom(project.room);
-  setPriority(project.priority);
-  setPositions(project.positions);
-}, [project]);
+  if (project) {
+    // Projekt bearbeiten
+    setProjectName(project.name);
+    setSelectedRoom(project.room);
+    setPriority(project.priority);
+    setPositions(project.positions);
+  } else {
+    // Neues Projekt
+    setProjectName("");
+    setSelectedRoom("🛋 Wohnzimmer");
+    setPriority("P0");
+    setPositions([
+      {
+        id: Date.now(),
+        title: "",
+        link: "",
+        price: 0,
+        paid_price: null,
+        country: "AT",
+        status: "offen",
+        image_url: "",
+      },
+    ]);
+  }
+}, [project, open]);
 
   if (!open) return null;
 
