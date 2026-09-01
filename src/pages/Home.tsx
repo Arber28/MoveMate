@@ -6,13 +6,15 @@ import SearchBar from "../components/SearchBar";
 import StatCards from "../components/StatCards";
 import Filters from "../components/Filters";
 import BottomBar from "../components/BottomBar";
-import AddProjectDrawer from "../components/AddProjectDrawer";
+import AddItemDrawer from "../components/AddItemDrawer";
 import FilterDrawer from "../components/FilterDrawer";
 import { Pencil, Trash2 } from "lucide-react";
 
-type Position = {
+type Item = {
   id: number;
   title: string;
+  room: string;
+  priority: string;
   link: string;
   price: number;
   paid_price: number | null;
@@ -21,21 +23,12 @@ type Position = {
   image_url: string;
 };
 
-type Project = {
-  id: number;
-  name: string;
-  room: string;
-  priority: string;
-  total_price: number;
-  positions: Position[];
-};
-
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [items, setItems] = useState<Item[]>([]); 
 
   const [search, setSearch] = useState("");
 
@@ -44,13 +37,10 @@ export default function Home() {
 
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const loadProjects = async () => {
+  const loadItems = async () => {
   const { data, error } = await supabase
-    .from("projects")
-    .select(`
-      *,
-      positions (*)
-    `)
+    .from("items")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -58,19 +48,14 @@ export default function Home() {
     return;
   }
 
-  setProjects(data || []);
+  setItems(data || []);
 };
 
-const deleteProject = async (id: number) => {
-  if (!confirm("Projekt wirklich löschen?")) return;
-
-  await supabase
-    .from("positions")
-    .delete()
-    .eq("project_id", id);
+const deleteItem = async (id: number) => {
+  if (!confirm("Produkt wirklich löschen?")) return;
 
   const { error } = await supabase
-    .from("projects")
+    .from("items")
     .delete()
     .eq("id", id);
 
@@ -79,11 +64,11 @@ const deleteProject = async (id: number) => {
     return;
   }
 
-  loadProjects();
+  loadItems();
 };
 
 useEffect(() => {
-  loadProjects();
+  loadItems();
 }, []);
 
 const priorityFilters = selectedFilters.filter((f) =>
@@ -98,95 +83,69 @@ const statusFilters = selectedFilters.filter((f) =>
   ["offen", "gekauft"].includes(f)
 );
 
-const filteredProjects = projects
-  .map((project) => {
-    const matchesPriority =
-      priorityFilters.length === 0 ||
-      priorityFilters.includes(project.priority);
+const filteredItems = items.filter((item) => {
+  const matchesSearch =
+    item.title.toLowerCase().includes(search.toLowerCase());
 
-    const matchesRoom =
-      roomFilters.length === 0 ||
-      roomFilters.some((room) => project.room.includes(room));
+  const matchesPriority =
+    priorityFilters.length === 0 ||
+    priorityFilters.includes(item.priority);
 
-    if (!matchesPriority || !matchesRoom) return null;
+  const matchesRoom =
+    roomFilters.length === 0 ||
+    roomFilters.some((r) => item.room.includes(r));
 
-    const positions = project.positions.filter((position) => {
-      const matchesSearch =
-        project.name.toLowerCase().includes(search.toLowerCase()) ||
-        position.title.toLowerCase().includes(search.toLowerCase());
+  const matchesStatus =
+    statusFilters.length === 0 ||
+    statusFilters.includes(item.status);
 
-      if (!matchesSearch) return false;
+  return (
+    matchesSearch &&
+    matchesPriority &&
+    matchesRoom &&
+    matchesStatus
+  );
+});
 
-      if (
-        statusFilters.length > 0 &&
-        !statusFilters.includes(position.status)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (positions.length === 0) return null;
-
-    return {
-      ...project,
-      positions,
-      total_price: positions.reduce(
-        (sum, p) => sum + p.price,
-        0
-      ),
-    };
-  })
-  .filter(Boolean) as Project[];
-
-const budget = filteredProjects.reduce(
-  (sum, project) => sum + project.total_price,
+const budget = filteredItems.reduce(
+  (sum, item) => sum + item.price,
   0
 );
 
-const spent = filteredProjects.reduce(
-  (sum, project) =>
+const spent = filteredItems.reduce(
+  (sum, item) =>
     sum +
-    project.positions
-      .filter((p) => p.status === "gekauft")
-      .reduce((s, p) => s + (p.paid_price ?? p.price), 0),
+    (item.status === "gekauft"
+      ? item.paid_price ?? item.price
+      : 0),
   0
 );
 
-const saved = filteredProjects.reduce(
-  (sum, project) =>
-    sum +
-    project.positions.reduce((s, p) => {
-      if (p.status !== "gekauft" || p.paid_price === null) return s;
+const saved = filteredItems.reduce(
+  (sum, item) => {
+    if (
+      item.status !== "gekauft" ||
+      item.paid_price == null
+    )
+      return sum;
 
-      return s + (p.price - p.paid_price);
-    }, 0),
+    return sum + (item.price - item.paid_price);
+  },
   0
 );
 
+const bought = filteredItems.filter(
+  (i) => i.status === "gekauft"
+).length;
 
-
-const bought = filteredProjects.reduce(
-  (sum, project) =>
-    sum +
-    project.positions.filter((p) => p.status === "gekauft").length,
-  0
-);
-
-const openCount = filteredProjects.reduce(
-  (sum, project) =>
-    sum +
-    project.positions.filter((p) => p.status === "offen").length,
-  0
-);
-
-const totalPositions = bought + openCount;
+const openCount = filteredItems.filter(
+  (i) => i.status === "offen"
+).length;
 
 const progress =
-  totalPositions === 0
+  items.length === 0
     ? 0
-    : Math.round((bought / totalPositions) * 100);
+    : Math.round((bought / items.length) * 100);
 
   return (
 
@@ -200,7 +159,7 @@ const progress =
   onChange={setSearch}
 />
 
-      <StatCards
+<StatCards
   budget={budget}
   spent={spent}
   saved={saved}
@@ -209,121 +168,140 @@ const progress =
   progress={progress}
 />
 
-      <Filters
+<Filters
   selected={selectedFilters}
   onOpen={() => setFilterOpen(true)}
 />
 
-      <div className="mt-4 space-y-4 px-5">
-  {filteredProjects.map((project) => (
+<div className="mt-4 space-y-4 px-5">
+  {filteredItems.map((item) => (
     <div
-      key={project.id}
-      className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"
+      key={item.id}
+      className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900"
     >
-      <div className="flex items-start justify-between">
-  <div>
-    <h2 className="text-xl font-bold">
-      {project.name}
-    </h2>
+      {item.image_url && (
+        <img
+          src={item.image_url}
+          alt={item.title}
+          className="h-56 w-full object-cover"
+        />
+      )}
 
-    <p className="mt-2 text-zinc-400">
-      {project.room}
-    </p>
-  </div>
+      <div className="p-5">
 
-  <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between">
 
-    <button
-  onClick={() => {
-    setSelectedProject(project);
-    setDrawerOpen(true);
-  }}
-  className="rounded-xl bg-zinc-800 p-2"
->
-  <Pencil size={18}/>
-</button>
+          <div>
+            <h2 className="text-xl font-bold">
+              {item.title}
+            </h2>
 
-<button
-  onClick={() => deleteProject(project.id)}
-  className="rounded-xl bg-red-500/10 p-2 text-red-400 transition hover:bg-red-500/20"
->
-  <Trash2 size={18} />
-</button>
-
-    <span className="rounded-full bg-violet-500/15 px-3 py-1 text-violet-400">
-      {project.priority}
-    </span>
-
-  </div>
-</div>
-
-      <div className="mt-5 space-y-2">
-        {project.positions.map((position) => (
-          <div
-            key={position.id}
-            className="flex items-center justify-between rounded-xl bg-zinc-950 p-3"
-          >
-            <div className="flex items-center gap-3">
-  {position.image_url && (
-    <img
-      src={position.image_url}
-      alt={position.title}
-      className="h-16 w-16 rounded-xl object-cover"
-    />
-  )}
-
-  <div>
-    <p className="font-medium">{position.title}</p>
-
-    <p className="text-sm text-zinc-500">
-      {position.country} • {position.status}
-    </p>
-  </div>
-</div>
-
-            <div className="text-right">
-  <p className="font-semibold text-violet-400">
-    {position.price.toFixed(2)} €
-  </p>
-
-  {position.status === "gekauft" &&
-    position.paid_price !== null && (
-      <p className="text-sm text-green-400">
-        Bezahlt: {position.paid_price.toFixed(2)} €
-      </p>
-    )}
-</div>
+            <p className="mt-1 text-zinc-400">
+              {item.room}
+            </p>
           </div>
-        ))}
-      </div>
 
-      <div className="mt-5 flex justify-between border-t border-zinc-800 pt-4">
-        <span className="text-zinc-400">Gesamt</span>
+          <span className="rounded-full bg-violet-500/15 px-3 py-1 text-violet-400">
+            {item.priority}
+          </span>
 
-        <span className="text-2xl font-bold text-violet-400">
-          {project.total_price.toFixed(2)} €
-        </span>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <p className="text-zinc-500">Preis</p>
+
+            <p className="mt-1 text-lg font-bold text-violet-400">
+              {item.price.toFixed(2)} €
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <p className="text-zinc-500">Status</p>
+
+            <p className="mt-1 font-semibold">
+              {item.status === "gekauft"
+                ? "✅ Gekauft"
+                : "🛒 Offen"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <p className="text-zinc-500">Kaufort</p>
+
+            <p className="mt-1">
+              {item.country === "AT"
+                ? "🇦🇹 Österreich"
+                : "🇽🇰 Kosovo"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <p className="text-zinc-500">Bezahlt</p>
+
+            <p className="mt-1">
+              {item.paid_price == null
+                ? "-"
+                : `${item.paid_price.toFixed(2)} €`}
+            </p>
+          </div>
+
+        </div>
+
+        {item.link && (
+          <a
+            href={item.link}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 block rounded-2xl bg-violet-600 py-3 text-center font-semibold transition hover:bg-violet-500"
+          >
+            Zum Produkt
+          </a>
+        )}
+
+        <div className="mt-5 flex gap-3">
+
+          <button
+            onClick={() => {
+              setSelectedItem(item);
+              setDrawerOpen(true);
+            }}
+            className="flex-1 rounded-2xl bg-zinc-800 py-3"
+          >
+            <Pencil className="mx-auto" size={18} />
+          </button>
+
+          <button
+            onClick={() => deleteItem(item.id)}
+            className="flex-1 rounded-2xl bg-red-500/10 py-3 text-red-400"
+          >
+            <Trash2 className="mx-auto" size={18} />
+          </button>
+
+        </div>
+
       </div>
     </div>
   ))}
 </div>
 
-      <BottomBar
+<BottomBar
   onAdd={() => {
-    setSelectedProject(null);
+    setSelectedItem(null);
     setDrawerOpen(true);
   }}
 />
 
-      <AddProjectDrawer
+<AddItemDrawer
   open={drawerOpen}
-  project={selectedProject}
+  item={selectedItem}
   onClose={() => {
     setDrawerOpen(false);
-    loadProjects();
+    loadItems();
   }}
 />
-
+  
 <FilterDrawer
   open={filterOpen}
   onClose={() => setFilterOpen(false)}

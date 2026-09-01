@@ -38,18 +38,28 @@ const [room, setRoom] = useState("🛋 Wohnzimmer");
 const [priority, setPriority] = useState("P0");
 
   useEffect(() => {
-  if (!item) return;
-
-  setTitle(item.title);
-  setLink(item.link);
-  setPrice(item.price);
-  setPaidPrice(item.paid_price);
-  setCountry(item.country);
-  setStatus(item.status);
-  setImageUrl(item.image_url);
-  setRoom(item.room);
-  setPriority(item.priority);
-}, [item]);
+  if (item) {
+    setTitle(item.title);
+    setLink(item.link);
+    setPrice(item.price);
+    setPaidPrice(item.paid_price);
+    setCountry(item.country);
+    setStatus(item.status);
+    setImageUrl(item.image_url);
+    setRoom(item.room);
+    setPriority(item.priority);
+  } else {
+    setTitle("");
+    setLink("");
+    setPrice(0);
+    setPaidPrice(null);
+    setCountry("AT");
+    setStatus("offen");
+    setImageUrl("");
+    setRoom("🛋 Wohnzimmer");
+    setPriority("P0");
+  }
+}, [item, open]);
 
   const uploadImage = async (file: File) => {
   const fileName = `${Date.now()}-${file.name}`;
@@ -73,24 +83,45 @@ const [priority, setPriority] = useState("P0");
 };
 
   const saveItem = async () => {
-  const { error } = await supabase.from("positions").insert({
-    title,
-    link,
-    price,
-    paid_price: paidPrice,
-    country,
-    status,
-    image_url: imageUrl,
-    room,
-    priority,
-  });
+  let error;
+
+  if (item) {
+    ({ error } = await supabase
+      .from("items")
+      .update({
+        title,
+        link,
+        price,
+        paid_price: paidPrice,
+        country,
+        status,
+        image_url: imageUrl,
+        room,
+        priority,
+      })
+      .eq("id", item.id));
+  } else {
+    ({ error } = await supabase
+      .from("items")
+      .insert({
+        title,
+        link,
+        price,
+        paid_price: paidPrice,
+        country,
+        status,
+        image_url: imageUrl,
+        room,
+        priority,
+      }));
+  }
 
   if (error) {
     alert(error.message);
     return;
   }
 
-  alert("Produkt gespeichert!");
+  alert(item ? "Produkt aktualisiert!" : "Produkt gespeichert!");
 
   setTitle("");
   setLink("");
@@ -104,6 +135,7 @@ const [priority, setPriority] = useState("P0");
 
   onClose();
 };
+
 
  if (!open) return null;
 
@@ -240,3 +272,109 @@ return (
           ))}
 
         </div>
+
+                {/* Kaufort */}
+
+        <div className="space-y-2">
+          <p className="text-sm text-zinc-400">
+            Kaufort
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+
+            <button
+              onClick={() => setCountry("AT")}
+              className={`rounded-xl border py-3 ${
+                country === "AT"
+                  ? "border-violet-500 bg-violet-500/15 text-violet-400"
+                  : "border-zinc-800 bg-zinc-900"
+              }`}
+            >
+              🇦🇹 Österreich
+            </button>
+
+            <button
+              onClick={() => setCountry("XK")}
+              className={`rounded-xl border py-3 ${
+                country === "XK"
+                  ? "border-violet-500 bg-violet-500/15 text-violet-400"
+                  : "border-zinc-800 bg-zinc-900"
+              }`}
+            >
+              🇽🇰 Kosovo
+            </button>
+
+          </div>
+        </div>
+
+        {/* Status */}
+
+        <div className="space-y-2">
+          <p className="text-sm text-zinc-400">
+            Status
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+
+            <button
+              onClick={() => setStatus("offen")}
+              className={`rounded-xl border py-3 ${
+                status === "offen"
+                  ? "border-violet-500 bg-violet-500/15 text-violet-400"
+                  : "border-zinc-800 bg-zinc-900"
+              }`}
+            >
+              Offen
+            </button>
+
+            <button
+              onClick={() => setStatus("gekauft")}
+              className={`rounded-xl border py-3 ${
+                status === "gekauft"
+                  ? "border-violet-500 bg-violet-500/15 text-violet-400"
+                  : "border-zinc-800 bg-zinc-900"
+              }`}
+            >
+              Gekauft
+            </button>
+
+          </div>
+        </div>
+
+        {status === "gekauft" && (
+          <input
+            type="number"
+            value={paidPrice ?? ""}
+            onChange={(e) =>
+              setPaidPrice(
+                e.target.value === ""
+                  ? null
+                  : Number(e.target.value)
+              )
+            }
+            placeholder="Tatsächlich bezahlt"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-4 outline-none focus:border-violet-500"
+          />
+        )}
+
+      </div>
+
+      {/* Footer */}
+
+      <div className="border-t border-zinc-800 p-5">
+
+        <button
+          onClick={saveItem}
+          className="w-full rounded-2xl bg-violet-600 py-4 font-semibold"
+        >
+          {item
+            ? "Produkt aktualisieren"
+            : "Produkt speichern"}
+        </button>
+
+      </div>
+
+    </div>
+  </>
+);
+}
