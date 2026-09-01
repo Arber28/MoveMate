@@ -174,7 +174,13 @@ const progress =
 />
 
 <div className="mt-4 space-y-4 px-5">
-  {filteredItems.map((item) => (
+  {filteredItems.map((item) => {
+  const currentPrice =
+    item.status === "gekauft"
+      ? item.paid_price ?? item.price
+      : item.price;
+
+  return (
   <div
     key={item.id}
     className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-3"
@@ -205,7 +211,7 @@ const progress =
 
       <div className="mt-2 flex items-center gap-3 text-sm">
         <span className="font-bold text-violet-400">
-          {item.price.toFixed(2)} €
+          {currentPrice.toFixed(2)} €
         </span>
 
         <span>
@@ -247,7 +253,8 @@ const progress =
       </button>
     </div>
   </div>
-))}
+);
+})}
 </div>
 
 <BottomBar
