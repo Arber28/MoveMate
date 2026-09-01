@@ -2,43 +2,26 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 import PivotTable from "../components/PivotTable";
-
 import BottomBar from "../components/BottomBar";
 
-type Position = {
+type PivotPosition = {
   id: number;
   title: string;
+  room: string;
+  priority: string;
   price: number;
   paid_price: number | null;
   status: "offen" | "gekauft";
   image_url: string;
 };
 
-type Project = {
-  id: number;
-  name: string;
-  room: string;
-  priority: string;
-  total_price: number;
-  positions: Position[];
-};
-
-type PivotPosition = Position & {
-  room: string;
-  project: string;
-  priority: string;
-};
-
 export default function Pivot() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [positions, setPositions] = useState<PivotPosition[]>([]);
 
-  const loadProjects = async () => {
+  const loadItems = async () => {
     const { data, error } = await supabase
-      .from("projects")
-      .select(`
-        *,
-        positions(*)
-      `)
+      .from("items")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -46,48 +29,39 @@ export default function Pivot() {
       return;
     }
 
-    setProjects(data || []);
+    setPositions(data || []);
   };
 
   useEffect(() => {
-    loadProjects();
+    loadItems();
   }, []);
 
-  const positions: PivotPosition[] = projects.flatMap((project) =>
-    project.positions.map((position) => ({
-      ...position,
-      room: project.room,
-      project: project.name,
-      priority: project.priority,
-    }))
-  );
-
   return (
-  <div className="min-h-screen bg-zinc-950 pb-24 text-white">
-    <div
-      className="px-6"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top) + 20px)",
-      }}
-    >
-      <h1 className="mb-6 text-3xl font-bold">
-        Pivot
-      </h1>
+    <div className="min-h-screen bg-zinc-950 pb-24 text-white">
+      <div
+        className="px-6"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top) + 20px)",
+        }}
+      >
+        <h1 className="mb-6 text-3xl font-bold">
+          Pivot
+        </h1>
 
-      <PivotTable
-        positions={positions}
-        status="offen"
-      />
+        <PivotTable
+          positions={positions}
+          status="offen"
+        />
 
-      <div className="h-8" />
+        <div className="h-8" />
 
-      <PivotTable
-        positions={positions}
-        status="gekauft"
-      />
+        <PivotTable
+          positions={positions}
+          status="gekauft"
+        />
+      </div>
+
+      <BottomBar onAdd={() => {}} />
     </div>
-
-    <BottomBar onAdd={() => {}} />
-  </div>
-);
+  );
 }

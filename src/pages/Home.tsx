@@ -175,115 +175,79 @@ const progress =
 
 <div className="mt-4 space-y-4 px-5">
   {filteredItems.map((item) => (
-    <div
-      key={item.id}
-      className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900"
-    >
-      {item.image_url && (
-        <img
-          src={item.image_url}
-          alt={item.title}
-          className="h-56 w-full object-cover"
-        />
-      )}
+  <div
+    key={item.id}
+    className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-3"
+  >
+    <img
+      src={
+        item.image_url ||
+        "https://placehold.co/80x80/27272a/ffffff?text=%F0%9F%93%A6"
+      }
+      alt={item.title}
+      className="h-20 w-20 rounded-xl object-cover"
+    />
 
-      <div className="p-5">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between">
+        <h2 className="truncate font-semibold text-white">
+          {item.title}
+        </h2>
 
-        <div className="flex items-start justify-between">
+        <span className="rounded-full bg-violet-500/15 px-2 py-1 text-xs text-violet-400">
+          {item.priority}
+        </span>
+      </div>
 
-          <div>
-            <h2 className="text-xl font-bold">
-              {item.title}
-            </h2>
+      <p className="mt-1 text-sm text-zinc-400">
+        {item.room}
+      </p>
 
-            <p className="mt-1 text-zinc-400">
-              {item.room}
-            </p>
-          </div>
+      <div className="mt-2 flex items-center gap-3 text-sm">
+        <span className="font-bold text-violet-400">
+          {item.price.toFixed(2)} €
+        </span>
 
-          <span className="rounded-full bg-violet-500/15 px-3 py-1 text-violet-400">
-            {item.priority}
-          </span>
+        <span>
+          {item.country === "AT"
+            ? "🇦🇹"
+            : "🇽🇰"}
+        </span>
 
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-
-          <div className="rounded-2xl bg-zinc-950 p-4">
-            <p className="text-zinc-500">Preis</p>
-
-            <p className="mt-1 text-lg font-bold text-violet-400">
-              {item.price.toFixed(2)} €
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-zinc-950 p-4">
-            <p className="text-zinc-500">Status</p>
-
-            <p className="mt-1 font-semibold">
-              {item.status === "gekauft"
-                ? "✅ Gekauft"
-                : "🛒 Offen"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-zinc-950 p-4">
-            <p className="text-zinc-500">Kaufort</p>
-
-            <p className="mt-1">
-              {item.country === "AT"
-                ? "🇦🇹 Österreich"
-                : "🇽🇰 Kosovo"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-zinc-950 p-4">
-            <p className="text-zinc-500">Bezahlt</p>
-
-            <p className="mt-1">
-              {item.paid_price == null
-                ? "-"
-                : `${item.paid_price.toFixed(2)} €`}
-            </p>
-          </div>
-
-        </div>
-
-        {item.link && (
-          <a
-            href={item.link}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-5 block rounded-2xl bg-violet-600 py-3 text-center font-semibold transition hover:bg-violet-500"
-          >
-            Zum Produkt
-          </a>
-        )}
-
-        <div className="mt-5 flex gap-3">
-
-          <button
-            onClick={() => {
-              setSelectedItem(item);
-              setDrawerOpen(true);
-            }}
-            className="flex-1 rounded-2xl bg-zinc-800 py-3"
-          >
-            <Pencil className="mx-auto" size={18} />
-          </button>
-
-          <button
-            onClick={() => deleteItem(item.id)}
-            className="flex-1 rounded-2xl bg-red-500/10 py-3 text-red-400"
-          >
-            <Trash2 className="mx-auto" size={18} />
-          </button>
-
-        </div>
-
+        <span
+          className={
+            item.status === "gekauft"
+              ? "text-green-400"
+              : "text-yellow-400"
+          }
+        >
+          {item.status === "gekauft"
+            ? "✔ Gekauft"
+            : "🛒 Offen"}
+        </span>
       </div>
     </div>
-  ))}
+
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={() => {
+          setSelectedItem(item);
+          setDrawerOpen(true);
+        }}
+        className="rounded-lg bg-zinc-800 p-2 hover:bg-zinc-700"
+      >
+        <Pencil size={18} />
+      </button>
+
+      <button
+        onClick={() => deleteItem(item.id)}
+        className="rounded-lg bg-red-500/10 p-2 text-red-400 hover:bg-red-500/20"
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  </div>
+))}
 </div>
 
 <BottomBar
